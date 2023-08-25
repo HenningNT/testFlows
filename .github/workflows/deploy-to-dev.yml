@@ -19,39 +19,30 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      dataapi: ${{ steps.filter.outputs.dataapi }}
-      orchestrator: ${{ steps.filter.outputs.orchestrator }}
-      models: ${{ steps.filter.outputs.models }}
-      infrastructure: ${{ steps.filter.outputs.infrastructure }}
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0      
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        base: 'main'
-        filters: |
-          dataapi:
-            - 'src/api/**'
-          orchestrator:
-            - 'orchestrator/**'
-          models:
-            - 'model/aep/**'
-          infrastructure:
-            - 'infrastructure/**'
+      changeA: true
+      changeB: false
 
-  dependsOnChange:
+
+  dependsOnChangeA:
     needs: [startHere, detectChanges]
-    if: needs.detectChanges.outputs.dataapi
+    if: needs.detectChanges.outputs.changeA
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
             
+  dependsOnChangeB:
+    needs: [startHere, detectChanges]
+    if: needs.detectChanges.outputs.changeB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
   dependsOnDependant:
-    needs: [startHere, dependsOnChange]
+    needs: [startHere, dependsOnChangeA, dependsOnChangeB]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
