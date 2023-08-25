@@ -19,35 +19,40 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      changeA: true
-      changeB: false
+      aepModelChange: 'true'
+      apiChange: 'false'
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - run: echo detectChanges
 
-  dependsOnChangeA:
+  dependsOnaepModelChange:
+    name: Publish PREVIEW AEP image
     needs: [startHere, detectChanges]
-    if: needs.detectChanges.outputs.changeA
+    if: ${{ needs.detectChanges.outputs.aepModelChange == 'true'}}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-            
-  dependsOnChangeB:
+      - run: |
+          echo dependsOnaepModelChange ${{ needs.detectChanges.outputs.aepModelChange }}
+          exit 1
+
+  dependsOnapiChange:
     needs: [startHere, detectChanges]
-    if: needs.detectChanges.outputs.changeB
+    if: ${{ needs.detectChanges.outputs.apiChange  == 'true'}}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - run: echo dependsOnapiChange
 
   dependsOnDependant:
-    needs: [startHere, dependsOnChangeA, dependsOnChangeB]
+    name: Smoketests
+    needs: [startHere, dependsOnaepModelChange, dependsOnapiChange]
+    if: ${{ always() }} && ${{ needs.dependsOnaepModelChange.result == 'success' }} && ( ${{ needs.detectChanges.outputs.aepModelChange  == 'true'}} || ${{ needs.detectChanges.outputs.apiChange  == 'true'}})
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - run: echo dependsOnDependant ${{  needs.dependsOnaepModelChange.result }}
+
+  finalJob:
+    name: Publish release AEP image
+    needs: [dependsOnDependant, dependsOnaepModelChange]
+    if: ${{ always() }} && ${{ !failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo finalJob
