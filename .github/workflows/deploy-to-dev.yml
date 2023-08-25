@@ -43,9 +43,17 @@ jobs:
 
   dependsOnChange:
     needs: [startHere, detectChanges]
+    if: needs.detectChanges.outputs.dataapi
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0        
+          fetch-depth: 0
             
+  dependsOnDependant:
+    needs: [startHere, dependsOnChange]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
